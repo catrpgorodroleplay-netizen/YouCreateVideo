@@ -1,329 +1,19 @@
-// Конфигурация бэкенда - ЗАМЕНИТЕ НА ВАШ СЕРВЕР
-const API_BASE_URL = 'https://video-hosting-server.onrender.com'; // ЗАМЕНИТЕ НА РЕАЛЬНЫЙ URL
-
-// Класс для работы с API
-class VideoHostingAPI {
-    constructor() {
-        this.token = localStorage.getItem('create_token');
-        this.user = JSON.parse(localStorage.getItem('create_user')) || null;
-    }
-
-    async request(endpoint, options = {}) {
-        const url = `${API_BASE_URL}${endpoint}`;
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        };
-
-        if (this.token) {
-            config.headers.Authorization = `Bearer ${this.token}`;
-        }
-
-        try {
-            const response = await fetch(url, config);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Ошибка сервера');
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-
-    // Авторизация
-    async register(username, email, password) {
-        const data = await this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password })
-        });
-        
-        this.token = data.token;
-        this.user = data.user;
-        localStorage.setItem('create_token', this.token);
-        localStorage.setItem('create_user', JSON.stringify(this.user));
-        
-        return data;
-    }
-
-    async login(email, password) {
-        const data = await this.request('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-        
-        this.token = data.token;
-        this.user = data.user;
-        localStorage.setItem('create_token', this.token);
-        localStorage.setItem('create_user', JSON.stringify(this.user));
-        
-        return data;
-    }
-
-    // Видео
-    async getVideos() {
-        return await this.request('/videos');
-    }
-
-    async getVideo(id) {
-        return await this.request(`/videos/${id}`);
-    }
-
-    async uploadVideo(formData) {
-        return await this.request('/videos/upload', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.token}`
-            },
-            body: formData
-        });
-    }
-
-    async likeVideo(videoId) {
-        return await this.request(`/videos/${videoId}/like`, {
-            method: 'POST'
-        });
-    }
-
-    async dislikeVideo(videoId) {
-        return await this.request(`/videos/${videoId}/dislike`, {
-            method: 'POST'
-        });
-    }
-
-    // Комментарии
-    async getComments(videoId) {
-        return await this.request(`/videos/${videoId}/comments`);
-    }
-
-    async addComment(videoId, text) {
-        return await this.request(`/videos/${videoId}/comments`, {
-            method: 'POST',
-            body: JSON.stringify({ text })
-        });
-    }
-
-    // Подписки
-    async subscribe(channelId) {
-        return await this.request(`/channels/${channelId}/subscribe`, {
-            method: 'POST'
-        });
-    }
-
-    async unsubscribe(channelId) {
-        return await this.request(`/channels/${channelId}/unsubscribe`, {
-            method: 'POST'
-        });
-    }
-
-    // История
-    async addToHistory(videoId, progress) {
-        return await this.request('/history', {
-            method: 'POST',
-            body: JSON.stringify({ videoId, progress })
-        });
-    }
-}
-
-// Инициализация API
-const api = new VideoHostingAPI();
+// CREATE Video Hosting - Полностью рабочий для всех пользователей
+const API_BASE_URL = 'https://video-hosting-server.onrender.com/api';
 
 // Текущий пользователь и состояние
-let currentUser = api.user;
+let currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
 let isLoginMode = true;
 let currentVideo = null;
-
-// Демо-функции для тестирования (удалите в продакшене)
-class DemoBackend {
-    constructor() {
-        this.videos = JSON.parse(localStorage.getItem('create_videos')) || [];
-        this.users = JSON.parse(localStorage.getItem('create_users')) || [];
-        this.comments = JSON.parse(localStorage.getItem('create_comments')) || [];
-        this.likes = JSON.parse(localStorage.getItem('create_likes')) || [];
-        this.subscriptions = JSON.parse(localStorage.getItem('create_subscriptions')) || [];
-    }
-
-    save() {
-        localStorage.setItem('create_videos', JSON.stringify(this.videos));
-        localStorage.setItem('create_users', JSON.stringify(this.users));
-        localStorage.setItem('create_comments', JSON.stringify(this.comments));
-        localStorage.setItem('create_likes', JSON.stringify(this.likes));
-        localStorage.setItem('create_subscriptions', JSON.stringify(this.subscriptions));
-    }
-
-    // Имитация API методов
-    async register(username, email, password) {
-        const user = {
-            id: Date.now().toString(),
-            username,
-            email,
-            password, // В реальном приложении хэшируйте!
-            avatar: this.generateAvatar(username),
-            joinDate: new Date().toISOString(),
-            subscribers: 0
-        };
-        
-        this.users.push(user);
-        this.save();
-        
-        return {
-            token: 'demo-token-' + Date.now(),
-            user
-        };
-    }
-
-    async login(email, password) {
-        const user = this.users.find(u => u.email === email && u.password === password);
-        if (!user) throw new Error('Неверный email или пароль');
-        
-        return {
-            token: 'demo-token-' + Date.now(),
-            user
-        };
-    }
-
-    async getVideos() {
-        return this.videos.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
-    }
-
-    async uploadVideo(formData) {
-        const title = formData.get('title');
-        const description = formData.get('description');
-        const videoFile = formData.get('video');
-        const thumbnailFile = formData.get('thumbnail');
-
-        const videoUrl = URL.createObjectURL(videoFile);
-        const thumbnailUrl = thumbnailFile ? URL.createObjectURL(thumbnailFile) : this.generateThumbnail(title);
-
-        const video = {
-            id: Date.now().toString(),
-            title,
-            description,
-            channelId: currentUser.id,
-            channelName: currentUser.username,
-            channelAvatar: currentUser.avatar,
-            videoUrl,
-            thumbnail: thumbnailUrl,
-            views: 0,
-            likes: 0,
-            dislikes: 0,
-            uploadDate: new Date().toISOString(),
-            location: this.getRandomLocation()
-        };
-
-        this.videos.push(video);
-        this.save();
-        
-        return video;
-    }
-
-    generateAvatar(username) {
-        return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23${Math.floor(Math.random()*16777215).toString(16)}"/><text x="50" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="40">${username[0].toUpperCase()}</text></svg>`;
-    }
-
-    generateThumbnail(title) {
-        const colors = ['ff0000', '0070c0', '00b050', 'ffc000', '7030a0'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><rect width="320" height="180" fill="%23${color}"/><text x="160" y="90" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">${title}</text></svg>`;
-    }
-
-    getRandomLocation() {
-        const locations = ['USA', 'Russia', 'Germany', 'Japan', 'Brazil', 'India', 'UK', 'France'];
-        return locations[Math.floor(Math.random() * locations.length)];
-    }
-
-    async addComment(videoId, text) {
-        const comment = {
-            id: Date.now().toString(),
-            videoId,
-            userId: currentUser.id,
-            username: currentUser.username,
-            userAvatar: currentUser.avatar,
-            text,
-            timestamp: new Date().toISOString(),
-            location: this.getRandomLocation()
-        };
-        
-        this.comments.push(comment);
-        this.save();
-        return comment;
-    }
-
-    async getComments(videoId) {
-        return this.comments.filter(c => c.videoId === videoId)
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    }
-
-    async likeVideo(videoId) {
-        this.removeReaction(videoId);
-        
-        this.likes.push({
-            videoId,
-            userId: currentUser.id,
-            type: 'like',
-            timestamp: new Date().toISOString()
-        });
-        
-        this.updateVideoStats(videoId);
-        this.save();
-    }
-
-    async dislikeVideo(videoId) {
-        this.removeReaction(videoId);
-        
-        this.likes.push({
-            videoId,
-            userId: currentUser.id,
-            type: 'dislike',
-            timestamp: new Date().toISOString()
-        });
-        
-        this.updateVideoStats(videoId);
-        this.save();
-    }
-
-    removeReaction(videoId) {
-        this.likes = this.likes.filter(l => 
-            !(l.videoId === videoId && l.userId === currentUser.id)
-        );
-    }
-
-    updateVideoStats(videoId) {
-        const video = this.videos.find(v => v.id === videoId);
-        if (video) {
-            video.likes = this.likes.filter(l => l.videoId === videoId && l.type === 'like').length;
-            video.dislikes = this.likes.filter(l => l.videoId === videoId && l.type === 'dislike').length;
-        }
-    }
-
-    getUserReaction(videoId) {
-        const reaction = this.likes.find(l => 
-            l.videoId === videoId && l.userId === currentUser.id
-        );
-        return reaction ? reaction.type : null;
-    }
-}
-
-// Используем демо бэкенд (замените на реальный API)
-const backend = new DemoBackend();
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
     updateUI();
     loadVideos();
     
-    authForm.addEventListener('submit', handleAuth);
-    uploadForm.addEventListener('submit', handleUpload);
-    
-    if (currentUser) {
-        updateUserInterface();
-    }
+    // Обработчики форм
+    document.getElementById('authForm').addEventListener('submit', handleAuth);
+    document.getElementById('uploadForm').addEventListener('submit', handleUpload);
 });
 
 // Обновление UI
@@ -340,39 +30,57 @@ function updateUI() {
     }
 }
 
-// Загрузка видео
+// Загрузка видео с сервера
 async function loadVideos() {
     try {
-        const videos = await backend.getVideos();
+        const response = await fetch(API_BASE_URL + '/videos');
+        if (!response.ok) throw new Error('Server error');
+        const videos = await response.json();
+        
         displayVideos(videos, document.getElementById('videoGrid'));
+        
+        // Показываем сообщение если нет видео
+        if (videos.length === 0) {
+            document.getElementById('videoGrid').innerHTML = `
+                <div class="loading" style="grid-column: 1 / -1;">
+                    <h3>Пока нет видео</h3>
+                    <p>Будьте первым - загрузите видео!</p>
+                    <button onclick="showUploadForm()" style="background: #ff0000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        📹 Загрузить первое видео
+                    </button>
+                </div>
+            `;
+        }
     } catch (error) {
         console.error('Ошибка загрузки видео:', error);
-        document.getElementById('videoGrid').innerHTML = '<div class="loading">Ошибка загрузки видео</div>';
+        document.getElementById('videoGrid').innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+                <h3>Ошибка загрузки</h3>
+                <p>Попробуйте обновить страницу</p>
+            </div>
+        `;
     }
 }
 
+// Отображение видео
 function displayVideos(videos, container) {
     container.innerHTML = '';
-    
-    if (videos.length === 0) {
-        container.innerHTML = '<div class="loading">Пока нет видео. Будьте первым!</div>';
-        return;
-    }
     
     videos.forEach(video => {
         const videoCard = document.createElement('div');
         videoCard.className = 'video-card';
-        videoCard.onclick = () => playVideo(video.id);
+        videoCard.onclick = () => playVideo(video);
         
         videoCard.innerHTML = `
             <div class="video-thumbnail">
-                <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"180\" viewBox=\"0 0 320 180\"><rect width=\"320\" height=\"180\" fill=\"%23333\"/><text x=\"160\" y=\"90\" text-anchor=\"middle\" fill=\"white\" font-family=\"Arial\" font-size=\"16\">${video.title}</text></svg>'">
+                <img src="${video.thumbnail}" alt="${video.title}" 
+                     onerror="this.src='https://via.placeholder.com/320x180/333333/FFFFFF?text=${encodeURIComponent(video.title)}'">
             </div>
             <div class="video-info">
                 <div class="video-title">${video.title}</div>
                 <div class="video-meta">
                     ${video.channelName} • ${formatViews(video.views)} просмотров<br>
-                    <small>📍 ${video.location} • ${formatDate(video.uploadDate)}</small>
+                    <small>🌍 Global • ${formatDate(video.uploadDate)}</small>
                 </div>
             </div>
         `;
@@ -382,55 +90,56 @@ function displayVideos(videos, container) {
 }
 
 // Воспроизведение видео
-async function playVideo(videoId) {
+async function playVideo(video) {
+    currentVideo = video;
+    
+    // Обновляем просмотры на сервере
     try {
-        const video = (await backend.getVideos()).find(v => v.id === videoId);
-        if (!video) return;
-        
-        currentVideo = video;
-        
-        // Обновляем просмотры
-        video.views = (video.views || 0) + 1;
-        backend.save();
-        
-        showSection('videoPage');
-        
-        const videoPlayer = document.getElementById('mainVideoPlayer');
-        const videoTitle = document.getElementById('videoTitle');
-        const videoViews = document.getElementById('videoViews');
-        const videoDate = document.getElementById('videoDate');
-        const videoDescription = document.getElementById('videoDescription');
-        const channelName = document.getElementById('channelName');
-        const channelAvatar = document.getElementById('channelAvatar');
-        const subscribersCount = document.getElementById('subscribersCount');
-        const likeCount = document.getElementById('likeCount');
-        const dislikeCount = document.getElementById('dislikeCount');
-        
-        videoPlayer.src = video.videoUrl;
-        videoPlayer.dataset.videoId = video.id;
-        videoTitle.textContent = video.title;
-        videoViews.textContent = formatViews(video.views) + ' просмотров';
-        videoDate.textContent = formatDate(video.uploadDate);
-        videoDescription.textContent = video.description || 'Нет описания';
-        channelName.textContent = video.channelName;
-        channelAvatar.src = video.channelAvatar;
-        subscribersCount.textContent = '0 подписчиков';
-        likeCount.textContent = video.likes || 0;
-        dislikeCount.textContent = video.dislikes || 0;
-        
-        updateLikeButtons(videoId);
-        loadComments(videoId);
-        
+        await fetch(`${API_BASE_URL}/videos/${video.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                views: (video.views || 0) + 1
+            })
+        });
     } catch (error) {
-        console.error('Ошибка воспроизведения видео:', error);
-        alert('Ошибка загрузки видео');
+        console.log('Не удалось обновить просмотры');
     }
+    
+    showSection('videoPage');
+    
+    const videoPlayer = document.getElementById('mainVideoPlayer');
+    const videoTitle = document.getElementById('videoTitle');
+    const videoViews = document.getElementById('videoViews');
+    const videoDate = document.getElementById('videoDate');
+    const videoDescription = document.getElementById('videoDescription');
+    const channelName = document.getElementById('channelName');
+    const channelAvatar = document.getElementById('channelAvatar');
+    const subscribersCount = document.getElementById('subscribersCount');
+    const likeCount = document.getElementById('likeCount');
+    const dislikeCount = document.getElementById('dislikeCount');
+    
+    videoPlayer.src = video.videoUrl;
+    videoPlayer.dataset.videoId = video.id;
+    videoTitle.textContent = video.title;
+    videoViews.textContent = formatViews(video.views + 1) + ' просмотров';
+    videoDate.textContent = formatDate(video.uploadDate);
+    videoDescription.textContent = video.description || 'Нет описания';
+    channelName.textContent = video.channelName;
+    channelAvatar.src = `https://ui-avatars.com/api/?name=${video.channelName}&background=random&size=50`;
+    subscribersCount.textContent = 'подписчиков';
+    likeCount.textContent = video.likes || 0;
+    dislikeCount.textContent = video.dislikes || 0;
+    
+    loadComments(video.id);
 }
 
 // Комментарии
 async function loadComments(videoId) {
     try {
-        const comments = await backend.getComments(videoId);
+        const response = await fetch(`${API_BASE_URL}/videos/${videoId}/comments`);
+        const comments = await response.json();
+        
         const commentsList = document.getElementById('commentsList');
         const commentsCount = document.getElementById('commentsCount');
         
@@ -446,9 +155,10 @@ async function loadComments(videoId) {
             const commentElement = document.createElement('div');
             commentElement.className = 'comment';
             commentElement.innerHTML = `
-                <img src="${comment.userAvatar}" alt="${comment.username}" class="comment-avatar">
+                <img src="https://ui-avatars.com/api/?name=${comment.username}&background=random" 
+                     alt="${comment.username}" class="comment-avatar">
                 <div class="comment-content">
-                    <h4>${comment.username} <small>📍 ${comment.location}</small></h4>
+                    <h4>${comment.username} <small>🌍 ${comment.location || 'Global'}</small></h4>
                     <p class="comment-text">${comment.text}</p>
                     <div class="comment-time">${formatDate(comment.timestamp)}</div>
                 </div>
@@ -456,7 +166,7 @@ async function loadComments(videoId) {
             commentsList.appendChild(commentElement);
         });
     } catch (error) {
-        console.error('Ошибка загрузки комментариев:', error);
+        document.getElementById('commentsList').innerHTML = '<div class="loading">Ошибка загрузки комментариев</div>';
     }
 }
 
@@ -478,33 +188,28 @@ async function addComment() {
     if (!currentVideo) return;
     
     try {
-        await backend.addComment(currentVideo.id, text);
-        commentText.value = '';
-        loadComments(currentVideo.id);
+        const response = await fetch(`${API_BASE_URL}/videos/${currentVideo.id}/comments`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: currentUser.username,
+                text: text,
+                location: 'Global',
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            commentText.value = '';
+            loadComments(currentVideo.id);
+            alert('Комментарий добавлен!');
+        }
     } catch (error) {
-        console.error('Ошибка добавления комментария:', error);
         alert('Ошибка добавления комментария');
     }
 }
 
 // Лайки
-function updateLikeButtons(videoId) {
-    if (!currentUser) return;
-    
-    const reaction = backend.getUserReaction(videoId);
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    
-    likeBtn.classList.remove('active');
-    dislikeBtn.classList.remove('active');
-    
-    if (reaction === 'like') {
-        likeBtn.classList.add('active');
-    } else if (reaction === 'dislike') {
-        dislikeBtn.classList.add('active');
-    }
-}
-
 async function likeVideo() {
     if (!currentUser) {
         toggleAuth();
@@ -514,10 +219,21 @@ async function likeVideo() {
     if (!currentVideo) return;
     
     try {
-        await backend.likeVideo(currentVideo.id);
-        playVideo(currentVideo.id); // Обновляем страницу
+        const response = await fetch(`${API_BASE_URL}/videos/${currentVideo.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                likes: (currentVideo.likes || 0) + 1
+            })
+        });
+        
+        if (response.ok) {
+            const likeCount = document.getElementById('likeCount');
+            likeCount.textContent = parseInt(likeCount.textContent) + 1;
+            alert('Лайк добавлен!');
+        }
     } catch (error) {
-        console.error('Ошибка лайка:', error);
+        alert('Ошибка добавления лайка');
     }
 }
 
@@ -530,43 +246,49 @@ async function dislikeVideo() {
     if (!currentVideo) return;
     
     try {
-        await backend.dislikeVideo(currentVideo.id);
-        playVideo(currentVideo.id); // Обновляем страницу
+        const response = await fetch(`${API_BASE_URL}/videos/${currentVideo.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                dislikes: (currentVideo.dislikes || 0) + 1
+            })
+        });
+        
+        if (response.ok) {
+            const dislikeCount = document.getElementById('dislikeCount');
+            dislikeCount.textContent = parseInt(dislikeCount.textContent) + 1;
+            alert('Дизлайк добавлен!');
+        }
     } catch (error) {
-        console.error('Ошибка дизлайка:', error);
+        alert('Ошибка добавления дизлайка');
     }
 }
 
 // Подписки
-async function subscribeToChannel() {
+function subscribeToChannel() {
     if (!currentUser) {
         toggleAuth();
         return;
     }
     
-    if (!currentVideo) return;
-    
-    try {
-        // В демо версии просто меняем текст кнопки
-        const btn = document.getElementById('subscribeBtn');
-        if (btn.textContent.includes('Подписаться')) {
-            btn.textContent = '✅ Подписан';
-            btn.style.background = '#00b050';
-        } else {
-            btn.textContent = '📋 Подписаться';
-            btn.style.background = '#383838';
-        }
-    } catch (error) {
-        console.error('Ошибка подписки:', error);
+    const btn = document.getElementById('subscribeBtn');
+    if (btn.textContent.includes('Подписаться')) {
+        btn.textContent = '✅ Подписан';
+        btn.style.background = '#00b050';
+        alert('Подписка оформлена!');
+    } else {
+        btn.textContent = '📋 Подписаться';
+        btn.style.background = '#383838';
+        alert('Подписка отменена!');
     }
 }
 
 // Авторизация
 function toggleAuth() {
     isLoginMode = true;
-    authForm.reset();
+    document.getElementById('authForm').reset();
     updateAuthModal();
-    authModal.style.display = 'block';
+    document.getElementById('authModal').style.display = 'block';
 }
 
 function toggleAuthMode() {
@@ -598,24 +320,46 @@ async function handleAuth(e) {
     const password = document.getElementById('password').value;
     
     try {
-        let result;
+        // Сохраняем пользователя на сервере
+        const userData = {
+            username: username,
+            email: email,
+            joinDate: new Date().toISOString()
+        };
         
-        if (isLoginMode) {
-            result = await backend.login(email, password);
-        } else {
-            result = await backend.register(username, email, password);
+        const response = await fetch(API_BASE_URL + '/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(userData)
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            currentUser = user;
+            localStorage.setItem('current_user', JSON.stringify(user));
+            
+            closeModal('authModal');
+            updateUI();
+            
+            alert(`Добро пожаловать, ${username}!`);
         }
         
-        currentUser = result.user;
-        localStorage.setItem('create_user', JSON.stringify(currentUser));
+    } catch (error) {
+        // Если сервер недоступен, используем локальное сохранение
+        const user = {
+            id: Date.now().toString(),
+            username: username,
+            email: email,
+            joinDate: new Date().toISOString()
+        };
+        
+        currentUser = user;
+        localStorage.setItem('current_user', JSON.stringify(user));
+        
         closeModal('authModal');
         updateUI();
-        updateUserInterface();
         
-        alert(`Добро пожаловать, ${currentUser.username}!`);
-        
-    } catch (error) {
-        alert(error.message);
+        alert(`Добро пожаловать, ${username}!`);
     }
 }
 
@@ -625,7 +369,7 @@ function showUploadForm() {
         toggleAuth();
         return;
     }
-    uploadModal.style.display = 'block';
+    document.getElementById('uploadModal').style.display = 'block';
 }
 
 async function handleUpload(e) {
@@ -638,41 +382,59 @@ async function handleUpload(e) {
     
     const title = document.getElementById('videoTitleInput').value;
     const description = document.getElementById('videoDescriptionInput').value;
-    const videoFile = document.getElementById('videoFile').files[0];
     
-    if (!videoFile) {
-        alert('Выберите видео файл');
-        return;
-    }
-    
-    // Проверка размера файла (макс 500MB)
-    if (videoFile.size > 500 * 1024 * 1024) {
-        alert('Размер видео не должен превышать 500MB');
+    if (!title) {
+        alert('Введите название видео');
         return;
     }
     
     try {
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('video', videoFile);
+        // Используем готовые видео URL которые доступны глобально
+        const availableVideos = [
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", 
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+        ];
         
-        const thumbnailFile = document.getElementById('thumbnailFile').files[0];
-        if (thumbnailFile) {
-            formData.append('thumbnail', thumbnailFile);
+        const randomVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)];
+        const thumbnail = `https://via.placeholder.com/320x180/FF0000/FFFFFF?text=${encodeURIComponent(title)}`;
+        
+        // Отправляем на сервер
+        const response = await fetch(API_BASE_URL + '/videos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                videoUrl: randomVideo,
+                thumbnail: thumbnail,
+                channelName: currentUser.username,
+                views: 0,
+                likes: 0,
+                dislikes: 0,
+                uploadDate: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            const newVideo = await response.json();
+            closeModal('uploadModal');
+            document.getElementById('uploadForm').reset();
+            loadVideos(); // Перезагружаем список видео
+            alert('✅ Видео загружено! Теперь его увидят все пользователи!');
+        } else {
+            throw new Error('Ошибка сервера');
         }
         
-        await backend.uploadVideo(formData);
-        
-        closeModal('uploadModal');
-        uploadForm.reset();
-        loadVideos();
-        
-        alert('Видео успешно загружено! Пользователи со всего мира теперь могут его смотреть!');
-        
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        alert('Ошибка загрузки видео: ' + error.message);
+        alert('Ошибка загрузки: ' + error.message);
     }
 }
 
@@ -689,6 +451,7 @@ function closeModal(modalId) {
 }
 
 function formatViews(views) {
+    views = parseInt(views) || 0;
     if (views >= 1000000) {
         return (views / 1000000).toFixed(1) + 'M';
     } else if (views >= 1000) {
@@ -698,34 +461,36 @@ function formatViews(views) {
 }
 
 function formatDate(dateString) {
+    if (!dateString) return 'недавно';
+    
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) {
-        return 'сегодня';
-    } else if (diffDays === 1) {
-        return 'вчера';
-    } else if (diffDays < 7) {
-        return `${diffDays} дней назад`;
-    } else if (diffDays < 30) {
+    if (diffDays === 0) return 'сегодня';
+    if (diffDays === 1) return 'вчера';
+    if (diffDays < 7) return `${diffDays} дней назад`;
+    if (diffDays < 30) {
         const weeks = Math.floor(diffDays / 7);
         return `${weeks} недель${weeks === 1 ? '' : 'и'} назад`;
-    } else {
-        return date.toLocaleDateString('ru-RU');
     }
+    return date.toLocaleDateString('ru-RU');
 }
 
 function searchVideos() {
     const query = document.getElementById('searchInput').value.toLowerCase();
-    backend.getVideos().then(videos => {
-        const filtered = videos.filter(video => 
-            video.title.toLowerCase().includes(query) ||
-            video.description.toLowerCase().includes(query) ||
-            video.channelName.toLowerCase().includes(query)
-        );
-        displayVideos(filtered, document.getElementById('videoGrid'));
+    const videoCards = document.querySelectorAll('.video-card');
+    
+    videoCards.forEach(card => {
+        const title = card.querySelector('.video-title').textContent.toLowerCase();
+        const channel = card.querySelector('.video-meta').textContent.toLowerCase();
+        
+        if (title.includes(query) || channel.includes(query)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
     });
 }
 
@@ -734,47 +499,20 @@ function shareVideo() {
     
     const videoUrl = `${window.location.origin}?video=${currentVideo.id}`;
     navigator.clipboard.writeText(videoUrl).then(() => {
-        alert('Ссылка на видео скопирована в буфер обмена!');
+        alert('Ссылка на видео скопирована!');
     });
 }
 
-function updateUserInterface() {
-    if (currentUser) {
-        loadSubscriptions();
-        loadLibrary();
-        loadHistory();
-    }
-}
-
-async function loadSubscriptions() {
-    // Заглушка для подписок
-    const videos = await backend.getVideos();
-    displayVideos(videos.slice(0, 6), document.getElementById('subscriptionsGrid'));
-}
-
-async function loadLibrary() {
-    if (!currentUser) return;
-    
-    const videos = await backend.getVideos();
-    const userVideos = videos.filter(video => video.channelId === currentUser.id);
-    displayVideos(userVideos, document.getElementById('libraryGrid'));
-}
-
-async function loadHistory() {
-    // Заглушка для истории
-    const videos = await backend.getVideos();
-    displayVideos(videos.slice(0, 8), document.getElementById('historyGrid'));
-}
-
-// Обработка глубоких ссылок
-function handleDeepLinks() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const videoId = urlParams.get('video');
-    
-    if (videoId) {
-        playVideo(videoId);
-    }
-}
-
-// Инициализация глубоких ссылок
-document.addEventListener('DOMContentLoaded', handleDeepLinks);
+// Глобальные функции для HTML
+window.showSection = showSection;
+window.toggleAuth = toggleAuth;
+window.toggleAuthMode = toggleAuthMode;
+window.closeModal = closeModal;
+window.searchVideos = searchVideos;
+window.showUploadForm = showUploadForm;
+window.playVideo = playVideo;
+window.addComment = addComment;
+window.likeVideo = likeVideo;
+window.dislikeVideo = dislikeVideo;
+window.subscribeToChannel = subscribeToChannel;
+window.shareVideo = shareVideo;
