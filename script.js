@@ -1,5 +1,5 @@
 // Конфигурация бэкенда - ЗАМЕНИТЕ НА ВАШ СЕРВЕР
-const API_BASE_URL = 'https://your-backend-server.com/api'; // ЗАМЕНИТЕ НА РЕАЛЬНЫЙ URL
+const API_BASE_URL = 'https://video-hosting-server.onrender.com' // ЗАМЕНИТЕ НА РЕАЛЬНЫЙ URL
 
 // Класс для работы с API
 class VideoHostingAPI {
