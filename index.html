@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CREATE - Ваш видео хостинг</title>
+    <title>CREATE - Международный видео хостинг</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,6 +11,7 @@
         <div class="header-container">
             <div class="logo">
                 <h1>CREATE</h1>
+                <small>Global Video Platform</small>
             </div>
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="Поиск видео...">
@@ -30,53 +31,49 @@
                     <li><a href="#" class="active" onclick="showSection('home')">🏠 Главная</a></li>
                     <li><a href="#" onclick="showSection('trending')">🔥 Популярное</a></li>
                     <li><a href="#" onclick="showSection('subscriptions')">📋 Подписки</a></li>
-                    <li><a href="#" onclick="showSection('library')">📚 Библиотека</a></li>
+                    <li><a href="#" onclick="showSection('library')">📚 Мои видео</a></li>
                     <li><a href="#" onclick="showSection('history')">⏱️ История</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
-            <!-- Домашняя страница -->
             <section id="home" class="content-section active">
-                <h2>Рекомендуемые видео</h2>
-                <div class="video-grid" id="videoGrid"></div>
+                <h2>Новые видео со всего мира</h2>
+                <div class="video-grid" id="videoGrid">
+                    <div class="loading">Загрузка видео...</div>
+                </div>
             </section>
 
-            <!-- Популярное -->
             <section id="trending" class="content-section">
                 <h2>Популярные видео</h2>
                 <div class="video-grid" id="trendingGrid"></div>
             </section>
 
-            <!-- Подписки -->
             <section id="subscriptions" class="content-section">
                 <h2>Подписки</h2>
                 <div class="video-grid" id="subscriptionsGrid"></div>
             </section>
 
-            <!-- Библиотека -->
             <section id="library" class="content-section">
-                <h2>Ваша библиотека</h2>
+                <h2>Мои видео</h2>
                 <div class="video-grid" id="libraryGrid"></div>
             </section>
 
-            <!-- История -->
             <section id="history" class="content-section">
                 <h2>История просмотров</h2>
                 <div class="video-grid" id="historyGrid"></div>
             </section>
 
-            <!-- Страница видео -->
             <section id="videoPage" class="content-section">
                 <div class="video-player-container">
                     <video id="mainVideoPlayer" controls></video>
                     <div class="video-info">
-                        <h2 id="videoTitle"></h2>
+                        <h2 id="videoTitle">Название видео</h2>
                         <div class="video-stats">
-                            <span id="videoViews"></span>
+                            <span id="videoViews">0 просмотров</span>
                             <span>•</span>
-                            <span id="videoDate"></span>
+                            <span id="videoDate">сегодня</span>
                             <div class="video-actions">
                                 <button onclick="likeVideo()" id="likeBtn">👍 <span id="likeCount">0</span></button>
                                 <button onclick="dislikeVideo()" id="dislikeBtn">👎 <span id="dislikeCount">0</span></button>
@@ -87,17 +84,17 @@
                         <div class="channel-info">
                             <img id="channelAvatar" src="" alt="Аватар канала">
                             <div>
-                                <h4 id="channelName"></h4>
-                                <p id="subscribersCount"></p>
+                                <h4 id="channelName">Имя канала</h4>
+                                <p id="subscribersCount">0 подписчиков</p>
                             </div>
                         </div>
                         <div class="video-description">
-                            <p id="videoDescription"></p>
+                            <p id="videoDescription">Описание видео</p>
                         </div>
                     </div>
                 </div>
                 <div class="comments-section">
-                    <h3>Комментарии</h3>
+                    <h3>Комментарии <span id="commentsCount">(0)</span></h3>
                     <div class="add-comment">
                         <textarea id="commentText" placeholder="Добавьте комментарий..."></textarea>
                         <button onclick="addComment()">Комментировать</button>
@@ -112,7 +109,7 @@
     <div id="authModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('authModal')">&times;</span>
-            <h2>Вход / Регистрация</h2>
+            <h2 id="authTitle">Вход в аккаунт</h2>
             <form id="authForm">
                 <input type="text" id="username" placeholder="Имя пользователя" required>
                 <input type="email" id="email" placeholder="Email" required>
@@ -130,13 +127,19 @@
             <form id="uploadForm">
                 <input type="text" id="videoTitleInput" placeholder="Название видео" required>
                 <textarea id="videoDescriptionInput" placeholder="Описание видео"></textarea>
-                <input type="file" id="videoFile" accept="video/*" required>
-                <input type="file" id="thumbnailFile" accept="image/*" required>
-                <button type="submit">Загрузить</button>
+                <div class="file-upload">
+                    <label for="videoFile">📹 Выберите видео файл (MP4, AVI, MOV):</label>
+                    <input type="file" id="videoFile" accept="video/*" required>
+                </div>
+                <div class="file-upload">
+                    <label for="thumbnailFile">🖼️ Выберите превью (JPG, PNG):</label>
+                    <input type="file" id="thumbnailFile" accept="image/*">
+                </div>
+                <button type="submit">📤 Загрузить видео</button>
             </form>
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
-  </html>
+                </html>
