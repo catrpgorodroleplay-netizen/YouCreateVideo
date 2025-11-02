@@ -19,6 +19,7 @@ header {
     width: 100%;
     top: 0;
     z-index: 1000;
+    border-bottom: 1px solid #333;
 }
 
 .header-container {
@@ -34,6 +35,12 @@ header {
     font-size: 24px;
 }
 
+.logo small {
+    color: #aaa;
+    font-size: 10px;
+    margin-left: 5px;
+}
+
 .search-bar {
     display: flex;
     flex: 0 1 728px;
@@ -41,37 +48,49 @@ header {
 
 .search-bar input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
     background: #121212;
     border: 1px solid #303030;
     color: white;
-    border-radius: 2px 0 0 2px;
+    border-radius: 20px 0 0 20px;
+    font-size: 14px;
 }
 
 .search-bar button {
     background: #303030;
     border: 1px solid #303030;
-    padding: 8px 16px;
-    border-radius: 0 2px 2px 0;
+    padding: 10px 20px;
+    border-radius: 0 20px 20px 0;
     cursor: pointer;
     color: white;
+    transition: background 0.3s;
+}
+
+.search-bar button:hover {
+    background: #404040;
 }
 
 .user-actions button {
     background: #ff0000;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     margin-left: 10px;
-    border-radius: 2px;
+    border-radius: 20px;
     cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.user-actions button:hover {
+    background: #cc0000;
 }
 
 /* Container */
 .container {
     display: flex;
-    margin-top: 60px;
-    min-height: calc(100vh - 60px);
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
 }
 
 /* Sidebar */
@@ -79,8 +98,9 @@ header {
     width: 240px;
     background-color: #202020;
     position: fixed;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 70px);
     overflow-y: auto;
+    border-right: 1px solid #333;
 }
 
 .sidebar ul {
@@ -91,10 +111,12 @@ header {
 .sidebar li a {
     display: flex;
     align-items: center;
-    padding: 10px 24px;
+    padding: 12px 24px;
     color: white;
     text-decoration: none;
     transition: background-color 0.2s;
+    border-radius: 10px;
+    margin: 0 8px;
 }
 
 .sidebar li a:hover,
@@ -107,6 +129,7 @@ header {
     flex: 1;
     margin-left: 240px;
     padding: 20px;
+    background: #0f0f0f;
 }
 
 .content-section {
@@ -127,31 +150,39 @@ header {
 
 .video-card {
     background: #282828;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #333;
 }
 
 .video-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
 .video-thumbnail {
     width: 100%;
     height: 180px;
-    background: #404040;
+    background: linear-gradient(45deg, #ff0000, #ff6b6b);
     position: relative;
+    overflow: hidden;
 }
 
 .video-thumbnail img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.video-card:hover .video-thumbnail img {
+    transform: scale(1.05);
 }
 
 .video-info {
-    padding: 12px;
+    padding: 15px;
 }
 
 .video-title {
@@ -161,11 +192,13 @@ header {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    font-size: 16px;
 }
 
 .video-meta {
     color: #aaa;
     font-size: 14px;
+    line-height: 1.4;
 }
 
 /* Video Player */
@@ -178,37 +211,54 @@ header {
     width: 100%;
     height: 500px;
     background: #000;
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .video-info {
     margin-top: 20px;
+    background: #282828;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #333;
 }
 
 .video-stats {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin: 10px 0;
+    margin: 15px 0;
     color: #aaa;
+    flex-wrap: wrap;
 }
 
 .video-actions {
     display: flex;
     gap: 10px;
     margin-left: auto;
+    flex-wrap: wrap;
 }
 
 .video-actions button {
     background: #383838;
     border: none;
     color: white;
-    padding: 8px 16px;
-    border-radius: 18px;
+    padding: 10px 20px;
+    border-radius: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    transition: background 0.3s;
+    font-weight: bold;
+}
+
+.video-actions button:hover {
+    background: #484848;
+}
+
+.video-actions button.active {
+    background: #ff0000;
 }
 
 .channel-info {
@@ -216,45 +266,66 @@ header {
     align-items: center;
     gap: 15px;
     margin: 20px 0;
-    padding: 15px 0;
+    padding: 20px 0;
     border-top: 1px solid #383838;
     border-bottom: 1px solid #383838;
 }
 
 .channel-info img {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #404040;
+    border: 2px solid #ff0000;
+}
+
+.channel-info div h4 {
+    font-size: 18px;
+    margin-bottom: 5px;
 }
 
 .video-description {
     margin: 20px 0;
     line-height: 1.6;
+    background: #383838;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ff0000;
 }
 
 /* Comments */
 .comments-section {
     max-width: 1000px;
     margin: 40px auto 0;
+    background: #282828;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #333;
 }
 
 .add-comment {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
     margin-bottom: 30px;
 }
 
 .add-comment textarea {
     width: 100%;
-    height: 80px;
+    height: 100px;
     background: #383838;
     border: 1px solid #505050;
-    border-radius: 4px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 15px;
     color: white;
     resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.add-comment textarea:focus {
+    outline: none;
+    border-color: #ff0000;
 }
 
 .add-comment button {
@@ -262,34 +333,53 @@ header {
     background: #ff0000;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 2px;
+    padding: 12px 25px;
+    border-radius: 20px;
     cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.add-comment button:hover {
+    background: #cc0000;
 }
 
 .comment {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
-    padding: 15px;
-    background: #282828;
-    border-radius: 8px;
+    padding: 20px;
+    background: #383838;
+    border-radius: 12px;
+    border: 1px solid #444;
 }
 
 .comment-avatar {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     background: #404040;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
 }
 
 .comment-content h4 {
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    color: #fff;
 }
 
 .comment-text {
     color: #ddd;
-    line-height: 1.4;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.comment-time {
+    color: #888;
+    font-size: 12px;
 }
 
 /* Modals */
@@ -301,17 +391,20 @@ header {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.8);
+    background-color: rgba(0,0,0,0.9);
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
     background-color: #282828;
     margin: 5% auto;
-    padding: 30px;
-    border-radius: 8px;
+    padding: 40px;
+    border-radius: 16px;
     width: 90%;
     max-width: 500px;
     position: relative;
+    border: 1px solid #444;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
 .close {
@@ -321,8 +414,9 @@ header {
     font-weight: bold;
     cursor: pointer;
     position: absolute;
-    right: 15px;
+    right: 20px;
     top: 15px;
+    transition: color 0.3s;
 }
 
 .close:hover {
@@ -330,30 +424,67 @@ header {
 }
 
 .modal-content h2 {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     text-align: center;
+    color: #fff;
 }
 
 .modal-content input,
 .modal-content textarea {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
     background: #383838;
     border: 1px solid #505050;
-    border-radius: 4px;
+    border-radius: 8px;
     color: white;
+    font-size: 14px;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border-color: #ff0000;
 }
 
 .modal-content button {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     background: #ff0000;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.modal-content button:hover {
+    background: #cc0000;
+}
+
+.file-upload {
+    margin-bottom: 20px;
+}
+
+.file-upload label {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.file-upload input {
+    margin-bottom: 0;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #aaa;
+    font-size: 18px;
+    grid-column: 1 / -1;
 }
 
 /* Responsive */
@@ -370,10 +501,12 @@ header {
     
     .main-content {
         margin-left: 0;
+        padding: 15px;
     }
     
     .header-container {
         flex-wrap: wrap;
+        gap: 10px;
     }
     
     .search-bar {
@@ -381,4 +514,14 @@ header {
         flex: 1 1 100%;
         margin-top: 10px;
     }
-  }
+    
+    .video-actions {
+        margin-left: 0;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 25px;
+    }
+    }
