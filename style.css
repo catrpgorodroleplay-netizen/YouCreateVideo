@@ -1,405 +1,651 @@
-// CREATE Video Hosting - РАБОЧИЙ БЕЗ ТАБЛИЦ
-const SUPABASE_URL = 'https://tpcyttxxxtnmfpvnyfmm.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwY3l0dHh4eHRubWZwdm55Zm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5OTgzMDUsImV4cCI6MjA3NzU3NDMwNX0.NQxbRwG68DZL781Zdd3baKiAhw3Q8xyhGgTgC57y39E';
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-// ВРЕМЕННОЕ ХРАНИЛИЩЕ ДО СОЗДАНИЯ ТАБЛИЦ
-let videos = JSON.parse(localStorage.getItem('real_videos')) || [];
-let currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
-let currentVideo = null;
+body {
+    font-family: 'Roboto', 'Arial', sans-serif;
+    background-color: #0f0f0f;
+    color: #f1f1f1;
+    line-height: 1.4;
+}
 
-// ИНИЦИАЛИЗАЦИЯ
-document.addEventListener('DOMContentLoaded', function() {
-    updateUI();
-    loadVideos();
-    
-    // Сразу показываем видео чтобы не было "загрузки"
-    if (videos.length === 0) {
-        createInitialVideos();
+/* Шапка */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background: #0f0f0f;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    border-bottom: 1px solid #272727;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.menu-btn:hover {
+    background: #272727;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff0000;
+}
+
+.header-center {
+    flex: 1;
+    max-width: 640px;
+    margin: 0 40px;
+}
+
+.search-container {
+    display: flex;
+    height: 40px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0 16px;
+    background: #121212;
+    border: 1px solid #303030;
+    border-radius: 20px 0 0 20px;
+    color: #fff;
+    font-size: 16px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #1c62b9;
+}
+
+.search-btn {
+    width: 64px;
+    background: #303030;
+    border: 1px solid #303030;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+    color: #fff;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-btn, .auth-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.upload-btn {
+    background: #ff0000;
+}
+
+.upload-btn:hover {
+    background: #cc0000;
+}
+
+.auth-btn {
+    background: #303030;
+}
+
+.auth-btn:hover {
+    background: #404040;
+}
+
+/* Контейнер */
+.container {
+    display: flex;
+    margin-top: 56px;
+    min-height: calc(100vh - 56px);
+}
+
+/* Боковое меню */
+.sidebar {
+    width: 240px;
+    background: #0f0f0f;
+    position: fixed;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    padding: 12px 0;
+}
+
+.sidebar-nav {
+    padding: 0;
+}
+
+.nav-section {
+    margin-bottom: 12px;
+}
+
+.nav-section-title {
+    padding: 8px 24px;
+    font-size: 14px;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 24px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.nav-item:hover {
+    background: #272727;
+}
+
+.nav-item.active {
+    background: #272727;
+    font-weight: 500;
+}
+
+.nav-item svg {
+    opacity: 0.8;
+}
+
+/* Основной контент */
+.main-content {
+    flex: 1;
+    margin-left: 240px;
+    padding: 24px;
+    background: #0f0f0f;
+}
+
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}
+
+/* Сетка видео */
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+}
+
+.video-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.video-card:hover {
+    transform: translateY(-2px);
+}
+
+.video-thumbnail {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.video-thumbnail img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #272727;
+}
+
+.video-info {
+    display: flex;
+    gap: 12px;
+}
+
+.channel-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+}
+
+.video-details {
+    flex: 1;
+}
+
+.video-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.video-meta {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.channel-name {
+    margin-bottom: 2px;
+}
+
+/* Страница видео */
+.video-layout {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.video-player-section {
+    margin-bottom: 24px;
+}
+
+.video-player-container {
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+#mainVideoPlayer {
+    width: 100%;
+    height: 720px;
+    background: #000;
+}
+
+.video-info {
+    margin-bottom: 16px;
+}
+
+.video-title {
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 8px;
+}
+
+.video-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.video-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #272727;
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.action-btn:hover {
+    background: #3f3f3f;
+}
+
+.action-btn.active {
+    background: #3ea6ff;
+    color: #0f0f0f;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    border-top: 1px solid #272727;
+    border-bottom: 1px solid #272727;
+    margin-bottom: 16px;
+}
+
+.channel-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #666;
+}
+
+.channel-details h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.subscribers {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.video-description {
+    background: #272727;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.description-content {
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+/* Комментарии */
+.comments-section {
+    max-width: 800px;
+}
+
+.comments-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.add-comment {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.comment-avatar-input {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+}
+
+.comment-input-container {
+    flex: 1;
+}
+
+.comment-textarea {
+    width: 100%;
+    height: 80px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #272727;
+    color: #fff;
+    font-size: 14px;
+    resize: none;
+    padding: 8px 0;
+    margin-bottom: 8px;
+}
+
+.comment-textarea:focus {
+    outline: none;
+    border-bottom-color: #3ea6ff;
+}
+
+.comment-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.cancel-comment, .submit-comment {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.cancel-comment {
+    background: transparent;
+    color: #3ea6ff;
+}
+
+.submit-comment {
+    background: #3ea6ff;
+    color: #0f0f0f;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.comment {
+    display: flex;
+    gap: 16px;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.comment-author {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background: #282828;
+    margin: 5% auto;
+    padding: 32px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 440px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.modal-content h2 {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    background: #383838;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3ea6ff;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #777;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.submit-btn:hover {
+    background: #cc0000;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 16px;
+    color: #aaa;
+}
+
+.auth-switch a {
+    color: #3ea6ff;
+    text-decoration: none;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .videos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
     }
     
-    document.getElementById('authForm').addEventListener('submit', handleAuth);
-    document.getElementById('uploadForm').addEventListener('submit', handleUpload);
-});
-
-// СОЗДАЕМ ПЕРВЫЕ ВИДЕО ЕСЛИ ПУСТО
-function createInitialVideos() {
-    videos = [
-        {
-            id: '1',
-            title: "Добро пожаловать на CREATE!",
-            description: "Первый реальный видео хостинг. Загружайте видео и делитесь с друзьями!",
-            video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            thumbnail: "https://i.ytimg.com/vi/YE7VzlLtp-4/maxresdefault.jpg",
-            channel_name: "CREATE Official",
-            views: 1560,
-            likes: 120,
-            dislikes: 5,
-            upload_date: new Date().toISOString()
-        },
-        {
-            id: '2',
-            title: "Как работает CREATE",
-            description: "Объяснение работы платформы",
-            video_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-            thumbnail: "https://i.ytimg.com/vi/9Pzv9cs2eSY/maxresdefault.jpg", 
-            channel_name: "CREATE Tutorials",
-            views: 890,
-            likes: 75,
-            dislikes: 2,
-            upload_date: new Date().toISOString()
-        }
-    ];
-    saveVideos();
-}
-
-// ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
-function updateUI() {
-    const authBtn = document.getElementById('authBtn');
-    const uploadBtn = document.getElementById('uploadBtn');
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
     
-    if (currentUser) {
-        authBtn.textContent = `👤 ${currentUser.username}`;
-        uploadBtn.style.display = 'block';
-    } else {
-        authBtn.textContent = '👤 Войти';
-        uploadBtn.style.display = 'none';
+    .header-center {
+        margin: 0 16px;
+    }
+    
+    .upload-btn span {
+        display: none;
+    }
+    
+    #mainVideoPlayer {
+        height: 400px;
+    }
+    
+    .videos-grid {
+        grid-template-columns: 1fr;
     }
 }
 
-// ЗАГРУЗКА ВИДЕО
-function loadVideos() {
-    displayVideos(videos, document.getElementById('videoGrid'));
+/* Утилиты */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #aaa;
+    font-size: 16px;
+    grid-column: 1 / -1;
 }
 
-// СОХРАНЕНИЕ ВИДЕО
-function saveVideos() {
-    localStorage.setItem('real_videos', JSON.stringify(videos));
-}
-
-// ОТОБРАЖЕНИЕ ВИДЕО
-function displayVideos(videos, container) {
-    container.innerHTML = '';
-    
-    videos.forEach(video => {
-        const videoCard = document.createElement('div');
-        videoCard.className = 'video-card';
-        videoCard.onclick = () => playVideo(video);
-        
-        videoCard.innerHTML = `
-            <div class="video-thumbnail">
-                <img src="${video.thumbnail}" alt="${video.title}">
-            </div>
-            <div class="video-info">
-                <div class="video-title">${video.title}</div>
-                <div class="video-meta">
-                    ${video.channel_name} • ${formatViews(video.views)} просмотров<br>
-                    <small>🌍 Global • ${formatDate(video.upload_date)}</small>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(videoCard);
-    });
-}
-
-// ВОСПРОИЗВЕДЕНИЕ ВИДЕО
-function playVideo(video) {
-    currentVideo = video;
-    
-    // Увеличиваем просмотры
-    video.views = (video.views || 0) + 1;
-    saveVideos();
-    
-    showSection('videoPage');
-    
-    const videoPlayer = document.getElementById('mainVideoPlayer');
-    const videoTitle = document.getElementById('videoTitle');
-    const videoViews = document.getElementById('videoViews');
-    const videoDate = document.getElementById('videoDate');
-    const videoDescription = document.getElementById('videoDescription');
-    const channelName = document.getElementById('channelName');
-    const channelAvatar = document.getElementById('channelAvatar');
-    const likeCount = document.getElementById('likeCount');
-    const dislikeCount = document.getElementById('dislikeCount');
-    
-    videoPlayer.src = video.video_url;
-    videoTitle.textContent = video.title;
-    videoViews.textContent = formatViews(video.views) + ' просмотров';
-    videoDate.textContent = formatDate(video.upload_date);
-    videoDescription.textContent = video.description || 'Нет описания';
-    channelName.textContent = video.channel_name;
-    channelAvatar.src = `https://ui-avatars.com/api/?name=${video.channel_name}&background=random&size=50`;
-    likeCount.textContent = video.likes || 0;
-    dislikeCount.textContent = video.dislikes || 0;
-    
-    loadComments(video.id);
-}
-
-// КОММЕНТАРИИ
-function loadComments(videoId) {
-    const comments = JSON.parse(localStorage.getItem(`comments_${videoId}`)) || [];
-    const commentsList = document.getElementById('commentsList');
-    const commentsCount = document.getElementById('commentsCount');
-    
-    commentsCount.textContent = `(${comments.length})`;
-    commentsList.innerHTML = '';
-    
-    if (comments.length === 0) {
-        commentsList.innerHTML = '<div class="loading">Пока нет комментариев</div>';
-        return;
+.error {
+    text-align: center;
+    padding: 40px;
+    color: #ff4444;
+    font-size: 16px;
+    grid-column: 1 / -1;
     }
-    
-    comments.forEach(comment => {
-        const commentElement = document.createElement('div');
-        commentElement.className = 'comment';
-        commentElement.innerHTML = `
-            <img src="https://ui-avatars.com/api/?name=${comment.username}&background=random" 
-                 alt="${comment.username}" class="comment-avatar">
-            <div class="comment-content">
-                <h4>${comment.username} <small>🌍 ${comment.location}</small></h4>
-                <p class="comment-text">${comment.text}</p>
-                <div class="comment-time">${formatDate(comment.timestamp)}</div>
-            </div>
-        `;
-        commentsList.appendChild(commentElement);
-    });
-}
-
-// ДОБАВЛЕНИЕ КОММЕНТАРИЯ
-function addComment() {
-    if (!currentUser) {
-        alert('Войдите в аккаунт чтобы комментировать');
-        toggleAuth();
-        return;
-    }
-    
-    const commentText = document.getElementById('commentText');
-    const text = commentText.value.trim();
-    
-    if (!text) {
-        alert('Введите текст комментария');
-        return;
-    }
-    
-    if (!currentVideo) return;
-    
-    const comments = JSON.parse(localStorage.getItem(`comments_${currentVideo.id}`)) || [];
-    
-    const newComment = {
-        id: Date.now().toString(),
-        username: currentUser.username,
-        text: text,
-        location: 'Global',
-        timestamp: new Date().toISOString()
-    };
-    
-    comments.unshift(newComment);
-    localStorage.setItem(`comments_${currentVideo.id}`, JSON.stringify(comments));
-    
-    commentText.value = '';
-    loadComments(currentVideo.id);
-    alert('💬 Комментарий добавлен!');
-}
-
-// ЛАЙКИ
-function likeVideo() {
-    if (!currentUser) {
-        toggleAuth();
-        return;
-    }
-    
-    if (!currentVideo) return;
-    
-    currentVideo.likes = (currentVideo.likes || 0) + 1;
-    saveVideos();
-    
-    const likeCount = document.getElementById('likeCount');
-    likeCount.textContent = currentVideo.likes;
-    alert('👍 Лайк добавлен!');
-}
-
-// ДИЗЛАЙКИ
-function dislikeVideo() {
-    if (!currentUser) {
-        toggleAuth();
-        return;
-    }
-    
-    if (!currentVideo) return;
-    
-    currentVideo.dislikes = (currentVideo.dislikes || 0) + 1;
-    saveVideos();
-    
-    const dislikeCount = document.getElementById('dislikeCount');
-    dislikeCount.textContent = currentVideo.dislikes;
-    alert('👎 Дизлайк добавлен!');
-}
-
-// ЗАГРУЗКА ВИДЕО
-function showUploadForm() {
-    if (!currentUser) {
-        toggleAuth();
-        return;
-    }
-    document.getElementById('uploadModal').style.display = 'block';
-}
-
-function handleUpload(e) {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        alert('Войдите в аккаунт чтобы загружать видео');
-        return;
-    }
-    
-    const title = document.getElementById('videoTitleInput').value;
-    const description = document.getElementById('videoDescriptionInput').value;
-    
-    if (!title) {
-        alert('Введите название видео');
-        return;
-    }
-    
-    // ИСПОЛЬЗУЕМ РЕАЛЬНЫЕ ВИДЕО URL
-    const availableVideos = [
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
-    ];
-    
-    const randomVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)];
-    const thumbnail = `https://via.placeholder.com/320x180/FF0000/FFFFFF?text=${encodeURIComponent(title)}`;
-    
-    const newVideo = {
-        id: Date.now().toString(),
-        title: title,
-        description: description,
-        video_url: randomVideo,
-        thumbnail: thumbnail,
-        channel_name: currentUser.username,
-        views: 0,
-        likes: 0,
-        dislikes: 0,
-        upload_date: new Date().toISOString()
-    };
-    
-    videos.unshift(newVideo);
-    saveVideos();
-    
-    closeModal('uploadModal');
-    document.getElementById('uploadForm').reset();
-    loadVideos();
-    
-    alert('✅ ВИДЕО ЗАГРУЖЕНО! ДАЙ ССЫЛКУ ДРУГУ - ОН УВИДИТ!');
-}
-
-// АВТОРИЗАЦИЯ
-function toggleAuth() {
-    document.getElementById('authForm').reset();
-    document.getElementById('authModal').style.display = 'block';
-}
-
-function handleAuth(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    
-    if (!username) {
-        alert('Введите имя пользователя');
-        return;
-    }
-    
-    currentUser = {
-        id: Date.now().toString(),
-        username: username,
-        email: email || 'no-email@example.com',
-        joinDate: new Date().toISOString()
-    };
-    
-    localStorage.setItem('current_user', JSON.stringify(currentUser));
-    closeModal('authModal');
-    updateUI();
-    
-    alert(`🎉 Добро пожаловать, ${username}!`);
-}
-
-// УТИЛИТЫ
-function showSection(sectionId) {
-    document.querySelectorAll('.content-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-function formatViews(views) {
-    views = parseInt(views) || 0;
-    if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
-    if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
-    return views;
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'недавно';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'сегодня';
-    if (diffDays === 1) return 'вчера';
-    if (diffDays < 7) return `${diffDays} дней назад`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} недель назад`;
-    return date.toLocaleDateString('ru-RU');
-}
-
-function searchVideos() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const videoCards = document.querySelectorAll('.video-card');
-    
-    videoCards.forEach(card => {
-        const title = card.querySelector('.video-title').textContent.toLowerCase();
-        const channel = card.querySelector('.video-meta').textContent.toLowerCase();
-        if (title.includes(query) || channel.includes(query)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-}
-
-// ГЛОБАЛЬНЫЕ ФУНКЦИИ
-window.showSection = showSection;
-window.toggleAuth = toggleAuth;
-window.closeModal = closeModal;
-window.searchVideos = searchVideos;
-window.showUploadForm = showUploadForm;
-window.playVideo = playVideo;
-window.addComment = addComment;
-window.likeVideo = likeVideo;
-window.dislikeVideo = dislikeVideo;
-window.subscribeToChannel = function() {
-    if (!currentUser) { toggleAuth(); return; }
-    const btn = document.getElementById('subscribeBtn');
-    if (btn.textContent.includes('Подписаться')) {
-        btn.textContent = '✅ Подписан';
-        btn.style.background = '#00b050';
-        alert('📋 Подписка оформлена!');
-    } else {
-        btn.textContent = '📋 Подписаться';
-        btn.style.background = '#383838';
-        alert('❌ Подписка отменена!');
-    }
-};
-window.shareVideo = function() {
-    if (!currentVideo) return;
-    navigator.clipboard.writeText(window.location.href).then(() => {
-        alert('🔗 Ссылка скопирована!');
-    });
-};
