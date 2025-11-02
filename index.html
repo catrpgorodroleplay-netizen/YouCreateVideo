@@ -187,6 +187,35 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Другие разделы -->
+            <section id="trending" class="content-section">
+                <h2>🔥 Популярные видео</h2>
+                <div class="videos-grid" id="trendingGrid">
+                    <div class="loading">Скоро здесь появятся популярные видео</div>
+                </div>
+            </section>
+
+            <section id="subscriptions" class="content-section">
+                <h2>📋 Подписки</h2>
+                <div class="videos-grid" id="subscriptionsGrid">
+                    <div class="loading">Подпишитесь на каналы чтобы видеть их видео здесь</div>
+                </div>
+            </section>
+
+            <section id="library" class="content-section">
+                <h2>📚 Мои видео</h2>
+                <div class="videos-grid" id="libraryGrid">
+                    <div class="loading">Загрузите свои первые видео</div>
+                </div>
+            </section>
+
+            <section id="history" class="content-section">
+                <h2>⏱️ История просмотров</h2>
+                <div class="videos-grid" id="historyGrid">
+                    <div class="loading">Здесь будет отображаться история ваших просмотров</div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -196,9 +225,18 @@
             <span class="close" onclick="closeModal('authModal')">&times;</span>
             <h2>Вход в CREATE</h2>
             <form id="authForm">
-                <input type="text" id="username" placeholder="Имя пользователя" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Пароль" required>
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="username" placeholder="Введите имя пользователя" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="Введите email" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="password" placeholder="Введите пароль" required>
+                </div>
                 <button type="submit" class="submit-btn">Войти</button>
             </form>
             <p class="auth-switch">
@@ -221,13 +259,14 @@
                     <textarea id="videoDescriptionInput" placeholder="Описание видео"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Ссылка на видео</label>
-                    <input type="url" id="videoUrlInput" placeholder="https://example.com/video.mp4" required>
-                    <small>Используйте прямые ссылки на видеофайлы</small>
+                    <label>Видео файл (MP4, WebM, MOV)</label>
+                    <input type="file" id="videoFile" accept="video/*" required>
+                    <small>Максимальный размер: 500MB</small>
                 </div>
                 <div class="form-group">
-                    <label>Превью (ссылка на изображение)</label>
-                    <input type="url" id="thumbnailInput" placeholder="https://example.com/image.jpg">
+                    <label>Превью (JPG, PNG)</label>
+                    <input type="file" id="thumbnailFile" accept="image/*">
+                    <small>Необязательно</small>
                 </div>
                 <button type="submit" class="submit-btn">Загрузить видео</button>
             </form>
@@ -236,4 +275,4 @@
 
     <script src="script.js"></script>
 </body>
-    </html>
+                        </html>
